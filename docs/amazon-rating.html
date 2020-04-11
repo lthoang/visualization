@@ -14,27 +14,24 @@
 </head>
 
 <body>
-  <!-- Create a div where the graph will take place -->
-  <!-- Add 2 buttons -->
-  <button onclick="update(data1)">Variable 1</button>
-  <button onclick="update(data2)">Variable 2</button>
+
+  <input id="slider" type="range" onchange="update(data[this.value])">
   <div id="visualization"></div>
 
 </body>
 <script>
-
   // create 2 data_set
   var data1 = [
-    { group: "A", value: 4 },
-    { group: "B", value: 16 },
-    { group: "C", value: 8 }
+    { ym: "A", count: 4, score: 4.1 },
+    { ym: "B", count: 16, score: 4.2 },
+    { ym: "C", count: 8, score: 4.3 }
   ];
 
   var data2 = [
-    { group: "A", value: 7 },
-    { group: "B", value: 1 },
-    { group: "C", value: 20 },
-    { group: "D", value: 10 }
+    { ym: "A", count: 7, score: 4.1 },
+    { ym: "B", count: 1, score: 4.1 },
+    { ym: "C", count: 20, score: 4.1 },
+    { ym: "D", count: 10, score: 4.1 }
   ];
 
   // set the dimensions and margins of the graph
@@ -53,27 +50,26 @@
 
   // Initialize the X axis
   var x = d3.scaleBand()
-    .range([0, width])
-    .padding(0.2);
+    .range([0, width]);
   var xAxis = svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
+    .attr("transform", "translate(0," + height + ")");
 
   // Initialize the Y axis
   var y = d3.scaleLinear()
     .range([height, 0]);
   var yAxis = svg.append("g")
-    .attr("class", "myYaxis")
+    .attr("class", "count");
 
 
   // A function that create / update the plot for a given variable:
   function update(data) {
 
     // Update the X axis
-    x.domain(data.map(function (d) { return d.group; }))
+    x.domain(data.map(function (d) { return d.ym; }))
     xAxis.call(d3.axisBottom(x))
 
     // Update the Y axis
-    y.domain([0, d3.max(data, function (d) { return d.value })]);
+    y.domain([0, d3.max(data, function (d) { return d.count; })]);
     yAxis.transition().duration(1000).call(d3.axisLeft(y));
 
     // Create the u variable
@@ -86,20 +82,33 @@
       .merge(u) // get the already existing elements as well
       .transition() // and apply changes to all of them
       .duration(1000)
-      .attr("x", function (d) { return x(d.group); })
-      .attr("y", function (d) { return y(d.value); })
+      .attr("x", function (d) { return x(d.ym); })
+      .attr("y", function (d) { return y(d.count); })
       .attr("width", x.bandwidth())
-      .attr("height", function (d) { return height - y(d.value); })
-      .attr("fill", "#69b3a2")
+      .attr("height", function (d) { return height - y(d.count); })
+      .attr("fill", "#69b3a2");
 
     // If less group in the new dataset, I delete the ones not in use anymore
     u
       .exit()
-      .remove()
+      .remove();
   }
 
-  // Initialize the plot with the first dataset
-  update(data1)
+  var data = [data1, data2];
+
+  document.getElementById("slider").setAttribute("min", 0);
+  document.getElementById("slider").setAttribute("max", data.length - 1);
+
+  autoPlaySlider(0);
+  function autoPlaySlider(index) {
+    slider = document.getElementById("slider");
+    if (index > slider.max) {
+      return;
+    }
+    slider.value = index;
+    update(data[index]);
+    setTimeout(autoPlaySlider, 2000, index + 1);
+  }
 
 </script>
 
