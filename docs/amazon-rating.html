@@ -6,13 +6,89 @@
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
   <title>Visualize Amazon Rating Statistics</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <style>
+    .container {
+      margin: auto;
+      width: 1200px;
+    }
+
+    .slidecontainer {
+      width: 100%;
+      /* Width of the outside container */
+    }
+
+    /* The slider itself */
+    .slider {
+      -webkit-appearance: none;
+      /* Override default CSS styles */
+      appearance: none;
+      width: 100%;
+      /* Full-width */
+      height: 25px;
+      /* Specified height */
+      background: #d3d3d3;
+      /* Grey background */
+      outline: none;
+      /* Remove outline */
+      opacity: 0.7;
+      /* Set transparency (for mouse-over effects on hover) */
+      -webkit-transition: .2s;
+      /* 0.2 seconds transition on hover */
+      transition: opacity .2s;
+    }
+
+    /* Mouse-over effects */
+    .slider:hover {
+      opacity: 1;
+      /* Fully shown on mouse-over */
+    }
+
+    /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      /* Override default look */
+      appearance: none;
+      width: 25px;
+      /* Set a specific slider handle width */
+      height: 25px;
+      /* Slider handle height */
+      background: #4CAF50;
+      /* Green background */
+      cursor: pointer;
+      /* Cursor on hover */
+    }
+
+    .slider::-moz-range-thumb {
+      width: 25px;
+      /* Set a specific slider handle width */
+      height: 25px;
+      /* Slider handle height */
+      background: #4CAF50;
+      /* Green background */
+      cursor: pointer;
+      /* Cursor on hover */
+    }
+
+    #currentTime::before {
+      content: "Time: ";
+      font: bold;
+    }
+
+    .title {
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body>
-  
-  <input id="slider" type="range" onchange="update(data[this.value])"><span id="currentTime"></span>
-  <div id="visualization"></div>
-  
+  <div class="container">
+    <div class="slidecontainer">
+      <input id="slider" class="slider" type="range" onchange="update(data[this.value])"><span id="currentTime"></span>
+    </div>
+    <h3 class="title">Average rating of Amazon products across different months (group by product launch time)</h3>
+    <div id="visualization"></div>
+  </div>
+
 </body>
 <script src="https://d3js.org/d3.v4.js"></script>
 <script>
@@ -101,8 +177,8 @@
       .transition()
       .duration(TRANSITION_TIME)
       .attr("d", d3.line()
-        .x(function(d) { return x(d.ym) + x.bandwidth() / 2 ; })
-        .y(function(d) { return yLine(d.score); }))
+        .x(function (d) { return x(d.ym) + x.bandwidth() / 2; })
+        .y(function (d) { return yLine(d.score); }))
       .attr("fill", "none")
       .attr("stroke", "orange")
       .attr("stroke-width", STROKE_WIDTH);
@@ -114,17 +190,17 @@
 
   var data = []
   var BreakException = {}
-  d3.csv("https://raw.githubusercontent.com/lthoang/visualization/master/data/rating_statistics.csv", function(error, dataframe) {
+  d3.csv("https://raw.githubusercontent.com/lthoang/visualization/master/data/rating_statistics.csv", function (error, dataframe) {
     var months = []
-    dataframe.forEach(function(d) {
+    dataframe.forEach(function (d) {
       months.push(d["ym"]);
     });
-    months.forEach(function(month) {
+    months.forEach(function (month) {
       var data_i = []
       try {
-        dataframe.forEach(function(d) {
+        dataframe.forEach(function (d) {
           if (isNaN(parseInt(d["rating_count " + month]))) throw BreakException;
-          data_i.push({ym: d["ym"], count: parseInt(d["rating_count " + month]), score: parseFloat(d["avg_score " + month])});
+          data_i.push({ ym: d["ym"], count: parseInt(d["rating_count " + month]), score: parseFloat(d["avg_score " + month]) });
         });
       } catch (e) {
         if (e !== BreakException) throw e;
