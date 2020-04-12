@@ -96,8 +96,11 @@
   const AUTO_TRANSITION_TIME = 100;
   const STROKE_WIDTH = 4;
   const RATING_AXIS_MIN = 4.0;
+  const LEGEND_SIZE = 15;
+  const SCORE_COLOR = "orange";
+  const COUNT_COLOR = "#69b3a2";
   // set the dimensions and margins of the graph
-  var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+  var margin = { top: 30, right: 60, bottom: 70, left: 60 },
     width = 1200 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
@@ -126,13 +129,42 @@
     .range([height, 0]);
   var yLineAxis = svg.append("g")
     .attr("class", "score")
-    .attr("transform", "translate(" + (width) + ",0)")
-    // .attr("text-anchor", "end")
-    ;
+    .attr("transform", "translate(" + (width) + ",0)");
 
   svg.append("g").attr("id", "bars");
   svg.append("g").attr("id", "lines").append("path").attr("id", "line");
-  // A function that create / update the plot for a given variable:
+
+  // Axis titles
+  svg.append("text")
+    .text("Count")
+    .attr("transform", "translate(-20,-10)");
+  svg.append("text")
+    .text("Score")
+    .attr("transform", "translate(" + (width - 15) + ",-10)");
+  svg.append("text")
+    .text("Time")
+    .attr("transform", "translate(" + (width + 5) + "," + (height + 30) +")");
+
+  // Legends
+  svg.append("rect")
+    .attr("x", width / 2 - 100)
+    .attr("y", -25).attr("width", LEGEND_SIZE)
+    .attr("height", LEGEND_SIZE)
+    .style("fill", COUNT_COLOR);
+  svg.append("text")
+    .text("Count")
+    .attr("x", width / 2 - 100 + LEGEND_SIZE * 1.5)
+    .attr("y", -20 + LEGEND_SIZE / 2);
+  svg.append("rect")
+    .attr("x", width / 2 + 50)
+    .attr("y", -25).attr("width", LEGEND_SIZE)
+    .attr("height", LEGEND_SIZE)
+    .style("fill", SCORE_COLOR);
+  svg.append("text")
+    .text("Score")
+    .attr("x", width / 2 + 50 + LEGEND_SIZE * 1.5)
+    .attr("y", -20 + LEGEND_SIZE / 2 + 2);
+
   function update(data) {
     // Update the X axis
     document.getElementById("currentTime").innerText = data[data.length - 1].ym;
@@ -170,7 +202,7 @@
       .attr("y", function (d) { return yBar(d.count); })
       .attr("width", x.bandwidth())
       .attr("height", function (d) { return height - yBar(d.count); })
-      .attr("fill", "#69b3a2");
+      .attr("fill", COUNT_COLOR);
 
     var line = svg.select("#line");
     line.datum(data)
@@ -180,7 +212,7 @@
         .x(function (d) { return x(d.ym) + x.bandwidth() / 2; })
         .y(function (d) { return yLine(d.score); }))
       .attr("fill", "none")
-      .attr("stroke", "orange")
+      .attr("stroke", SCORE_COLOR)
       .attr("stroke-width", STROKE_WIDTH);
 
     bar
