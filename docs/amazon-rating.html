@@ -6,38 +6,38 @@
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
   <title>Visualize Amazon Rating Statistics</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
-    <script src='main.js'></script> -->
-
-  <!-- Load d3.js -->
-  <script src="https://d3js.org/d3.v4.js"></script>
 </head>
 
 <body>
-
+  
   <input id="slider" type="range" onchange="update(data[this.value])">
   <div id="visualization"></div>
-
+  
 </body>
+<script src="https://d3js.org/d3.v4.js"></script>
 <script>
+  const TRANSITION_TIME = 1000;
+  const AUTO_TRANSITION_TIME = 2000;
+  const HEIGTH = 1060;
+  const STROKE_WIDTH = 4;
+  const RATING_AXIS_MIN = 4.0;
+  // set the dimensions and margins of the graph
+  var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+    width = 1060 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
   // create 2 data_set
   var data1 = [
     { ym: "A", count: 4, score: 4.1 },
-    { ym: "B", count: 16, score: 4.2 },
+    { ym: "B", count: 13, score: 4.2 },
     { ym: "C", count: 8, score: 4.3 }
   ];
 
   var data2 = [
-    { ym: "A", count: 7, score: 4.1 },
-    { ym: "B", count: 1, score: 4.1 },
-    { ym: "C", count: 20, score: 4.1 },
-    { ym: "D", count: 10, score: 4.1 }
+    { ym: "A", count: 4, score: 4.1 },
+    { ym: "B", count: 16, score: 4.15 },
+    { ym: "C", count: 8, score: 4.3 },
   ];
-
-  // set the dimensions and margins of the graph
-  var margin = { top: 30, right: 30, bottom: 70, left: 60 },
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
 
   // append the svg object to the body of the page
   var svg = d3.select("#visualization")
@@ -49,47 +49,71 @@
       "translate(" + margin.left + "," + margin.top + ")");
 
   // Initialize the X axis
-  var x = d3.scaleBand()
+  var xBar = d3.scaleBand()
     .range([0, width]);
-  var xAxis = svg.append("g")
+  var xBarAxis = svg.append("g")
     .attr("transform", "translate(0," + height + ")");
 
   // Initialize the Y axis
-  var y = d3.scaleLinear()
+  var yBar = d3.scaleLinear()
     .range([height, 0]);
-  var yAxis = svg.append("g")
+  var yBarAxis = svg.append("g")
     .attr("class", "count");
 
+  var yLine = d3.scaleLinear()
+    .range([height, 0]);
+  var yLineAxis = svg.append("g")
+    .attr("class", "score")
+    .attr("transform", "translate(" + (width) + ",0)")
+    // .attr("text-anchor", "end")
+    ;
 
+  svg.append("g").attr("id", "bars");
+  svg.append("g").attr("id", "lines").append("path").attr("id", "line");
   // A function that create / update the plot for a given variable:
   function update(data) {
-
     // Update the X axis
-    x.domain(data.map(function (d) { return d.ym; }))
-    xAxis.call(d3.axisBottom(x))
+    xBar.domain(data.map(function (d) { return d.ym; }));
+    xBarAxis.call(d3.axisBottom(xBar));
 
     // Update the Y axis
-    y.domain([0, d3.max(data, function (d) { return d.count; })]);
-    yAxis.transition().duration(1000).call(d3.axisLeft(y));
+    yBar.domain([0, d3.max(data, function (d) { return d.count; })]);
+    yBarAxis.transition().duration(TRANSITION_TIME).call(d3.axisLeft(yBar));
+
+    // Update the Y axis for line chart
+    yLine.domain([
+      d3.min([RATING_AXIS_MIN, d3.min(data, function(d) { return d.score; })]),
+      d3.max(data, function(d) { return d.score; })]);
+    yLineAxis.transition().duration(TRANSITION_TIME).call(d3.axisRight(yLine));
 
     // Create the u variable
-    var u = svg.selectAll("rect")
-      .data(data)
+    var bar = svg.select("#bars").selectAll("rect")
+      .data(data);
 
-    u
+    bar
       .enter()
       .append("rect") // Add a new rect for each new elements
-      .merge(u) // get the already existing elements as well
+      .merge(bar) // get the already existing elements as well
       .transition() // and apply changes to all of them
-      .duration(1000)
-      .attr("x", function (d) { return x(d.ym); })
-      .attr("y", function (d) { return y(d.count); })
-      .attr("width", x.bandwidth())
-      .attr("height", function (d) { return height - y(d.count); })
+      .duration(TRANSITION_TIME)
+      .attr("x", function (d) { return xBar(d.ym); })
+      .attr("y", function (d) { return yBar(d.count); })
+      .attr("width", xBar.bandwidth())
+      .attr("height", function (d) { return height - yBar(d.count); })
       .attr("fill", "#69b3a2");
 
-    // If less group in the new dataset, I delete the ones not in use anymore
-    u
+    var line = svg.select("#line");
+    line.datum(data)
+      .transition()
+      .duration(TRANSITION_TIME)
+      .attr("d", d3.line()
+        .x(function(d) { return xBar(d.ym) + xBar.bandwidth() / 2 ; })
+        .y(function(d) { return yLine(d.score); }))
+      .attr("fill", "none")
+      .attr("stroke", "orange")
+      .attr("stroke-width", STROKE_WIDTH);
+
+    bar
       .exit()
       .remove();
   }
@@ -107,7 +131,7 @@
     }
     slider.value = index;
     update(data[index]);
-    setTimeout(autoPlaySlider, 2000, index + 1);
+    setTimeout(autoPlaySlider, AUTO_TRANSITION_TIME, index + 1);
   }
 
 </script>
